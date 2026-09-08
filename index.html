@@ -1,0 +1,819 @@
+<title>Retícula de Retrato</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:   #f2f1ee;
+    --surface:  #ffffff;
+    --sunken:   #e7e5e0;
+    --line:     #d3d0c9;
+    --ink:      #16181c;
+    --ink-dim:  #6b6f78;
+    --registro: #007b80;
+    --marca:    #c8356f;
+    --palco:    #0b0c0e;
+    --palco-ink:#f4f4f2;
+
+    --passo: 0.5rem;
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #0b0c0e;
+      --surface:  #15171b;
+      --sunken:   #101216;
+      --line:     #272b32;
+      --ink:      #e8eaee;
+      --ink-dim:  #8b9099;
+      --registro: #2ad4d9;
+      --marca:    #ff5b93;
+      --palco:    #08090b;
+      --palco-ink:#f4f4f2;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:   #0b0c0e;
+    --surface:  #15171b;
+    --sunken:   #101216;
+    --line:     #272b32;
+    --ink:      #e8eaee;
+    --ink-dim:  #8b9099;
+    --registro: #2ad4d9;
+    --marca:    #ff5b93;
+    --palco:    #08090b;
+    --palco-ink:#f4f4f2;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .folha {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2rem) 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  /* ---------- cabeçalho ---------- */
+
+  .topo { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--registro);
+  }
+
+  h1 {
+    font-family: Anton, "Public Sans", sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.4rem, 7vw, 4rem);
+    line-height: 0.92;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .intro {
+    max-width: 62ch;
+    color: var(--ink-dim);
+    margin: 0.25rem 0 0;
+  }
+  .intro b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- bancada ---------- */
+
+  .bancada {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    gap: 1.25rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .bancada { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* palco: fundo escuro nos dois temas, porque a retícula é branca */
+  .palco {
+    position: relative;
+    background: var(--palco);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: clamp(1rem, 3vw, 2rem);
+    min-height: 26rem;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  #saida { display: block; max-width: 100%; max-height: 34rem; width: auto; height: auto; object-fit: contain; }
+
+  /* marcas de registro — o alinhamento de chapa numa prova de impressão */
+  .registro {
+    position: absolute;
+    width: 15px; height: 15px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .registro::before, .registro::after {
+    content: ""; position: absolute; background: var(--registro);
+  }
+  .registro::before { left: 7px; top: 0; width: 1px; height: 15px; }
+  .registro::after  { top: 7px; left: 0; height: 1px; width: 15px; }
+  .r-tl { top: 10px; left: 10px; }
+  .r-tr { top: 10px; right: 10px; }
+  .r-bl { bottom: 10px; left: 10px; }
+  .r-br { bottom: 10px; right: 10px; }
+
+  .selo {
+    position: absolute;
+    bottom: 12px; left: 50%; transform: translateX(-50%);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--palco-ink);
+    opacity: 0.32;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  /* ---------- painel ---------- */
+
+  .painel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .painel > * + * { border-top: 1px solid var(--line); }
+
+  .bloco { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
+  .rotulo-bloco {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  /* zona de arquivo */
+  .solta {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 1.1rem 1rem;
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    background: var(--sunken);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .solta:hover, .solta.ativa { border-color: var(--registro); background: var(--surface); }
+  .solta:focus-visible { outline: 2px solid var(--registro); outline-offset: 2px; }
+  .solta strong { font-weight: 600; font-size: 0.9375rem; }
+  .solta span { font-size: 0.75rem; color: var(--ink-dim); }
+
+  /* controles */
+  .ctrl { display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 0.75rem; align-items: baseline; }
+  .ctrl label { font-size: 0.8125rem; }
+  .ctrl .valor {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--registro);
+  }
+  .ctrl .nota { grid-column: 1 / -1; font-size: 0.6875rem; color: var(--ink-dim); margin-top: -0.15rem; }
+  .ctrl input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--registro); margin: 0.1rem 0 0; }
+  .ctrl input[type="range"]:focus-visible { outline: 2px solid var(--registro); outline-offset: 3px; }
+
+  /* ações */
+  .acoes { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  button.acao {
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.6rem 0.9rem;
+    border-radius: 2px;
+    border: 1px solid var(--line);
+    background: var(--sunken);
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  button.acao:hover { border-color: var(--registro); }
+  button.acao:focus-visible { outline: 2px solid var(--registro); outline-offset: 2px; }
+  button.acao.forte { background: var(--registro); border-color: var(--registro); color: var(--ground); font-weight: 600; }
+  button.acao.forte:hover { filter: brightness(1.08); }
+  button.acao[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+  .aviso {
+    font-size: 0.75rem;
+    color: var(--marca);
+    display: none;
+    line-height: 1.45;
+  }
+  .aviso.visivel { display: block; }
+
+  /* ---------- receita ---------- */
+
+  .receita { display: flex; flex-direction: column; gap: 1rem; }
+
+  h2 {
+    font-family: Anton, sans-serif;
+    font-weight: 400;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .passos { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+
+  .passo {
+    background: var(--surface);
+    padding: 0.9rem 1rem;
+    display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  .passo .ordem {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.625rem; letter-spacing: 0.18em;
+    color: var(--registro);
+  }
+  .passo h3 { margin: 0; font-size: 0.9375rem; font-weight: 600; }
+  .passo p { margin: 0; font-size: 0.8125rem; color: var(--ink-dim); }
+  .passo code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--ink);
+    background: var(--sunken);
+    padding: 0.05rem 0.3rem;
+    border-radius: 2px;
+  }
+
+  .rodape { font-size: 0.8125rem; color: var(--ink-dim); max-width: 68ch; }
+  .rodape code { font-family: "JetBrains Mono", monospace; font-size: 0.75rem; background: var(--sunken); padding: 0.05rem 0.3rem; border-radius: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="folha">
+
+  <header class="topo">
+    <span class="eyebrow">Retícula · meio-tom por luminância</span>
+    <h1>Retícula de retrato</h1>
+    <p class="intro">
+      O retrato em pontinhos não é desenhado à mão: é uma foto comum lida pixel a pixel, onde
+      cada bloco de 4×4 vira <b>um ponto cujo raio é a luminância daquele bloco</b>. Solte seu
+      PNG com fundo transparente e mexa nos números.
+    </p>
+  </header>
+
+  <div class="bancada">
+
+    <div class="palco">
+      <span class="registro r-tl"></span>
+      <span class="registro r-tr"></span>
+      <span class="registro r-bl"></span>
+      <span class="registro r-br"></span>
+      <canvas id="saida" width="900" height="1013" aria-label="Retrato reticulado"></canvas>
+      <span class="selo" id="selo">exemplo sintético — solte sua foto para trocar</span>
+    </div>
+
+    <div class="painel">
+
+      <div class="bloco">
+        <span class="rotulo-bloco">Origem</span>
+        <div class="solta" id="solta" role="button" tabindex="0">
+          <strong>Solte um PNG</strong>
+          <span>ou clique para escolher · fundo transparente</span>
+        </div>
+        <p class="aviso" id="aviso"></p>
+        <input type="file" id="arquivo" accept="image/*" hidden>
+      </div>
+
+      <div class="bloco">
+        <span class="rotulo-bloco">Retícula</span>
+
+        <div class="ctrl">
+          <label for="bloco">Bloco</label>
+          <span class="valor" id="v-bloco">4 px</span>
+          <input type="range" id="bloco" min="2" max="12" step="1" value="4">
+          <span class="nota">quantos pixels viram um ponto — a densidade da grade</span>
+        </div>
+
+        <div class="ctrl">
+          <label for="raio">Raio máximo</label>
+          <span class="valor" id="v-raio">8.0</span>
+          <input type="range" id="raio" min="3" max="14" step="0.5" value="8">
+          <span class="nota">tamanho do ponto no branco puro</span>
+        </div>
+
+        <div class="ctrl">
+          <label for="gama">Gama do raio</label>
+          <span class="valor" id="v-gama">1.30</span>
+          <input type="range" id="gama" min="0.6" max="2.4" step="0.05" value="1.3">
+          <span class="nota">acima de 1 engole os meios-tons e limpa a sombra</span>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <span class="rotulo-bloco">Tratamento da imagem</span>
+
+        <div class="ctrl">
+          <label for="contraste">Contraste</label>
+          <span class="valor" id="v-contraste">1.40</span>
+          <input type="range" id="contraste" min="0.6" max="3" step="0.05" value="1.4">
+          <span class="nota">abre a faixa antes de medir a luz</span>
+        </div>
+
+        <div class="ctrl">
+          <label for="nitidez">Nitidez</label>
+          <span class="valor" id="v-nitidez">1.80</span>
+          <input type="range" id="nitidez" min="0" max="4" step="0.1" value="1.8">
+          <span class="nota">devolve a diferença contra um borrado de 2 px — crava olho e boca</span>
+        </div>
+
+        <div class="ctrl">
+          <label for="corte">Corte de alpha</label>
+          <span class="valor" id="v-corte">140</span>
+          <input type="range" id="corte" min="0" max="250" step="5" value="140">
+          <span class="nota">o quanto do recorte é considerado fundo</span>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <span class="rotulo-bloco">Entrada</span>
+        <div class="ctrl">
+          <label for="duracao">Duração</label>
+          <span class="valor" id="v-duracao">1.80 s</span>
+          <input type="range" id="duracao" min="0.4" max="4" step="0.1" value="1.8">
+          <span class="nota">os pontos voam de um lugar aleatório até o seu, cada um com o seu atraso</span>
+        </div>
+        <div class="acoes">
+          <button class="acao" id="tocar" type="button">Reproduzir a entrada</button>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <div class="acoes">
+          <button class="acao forte" id="baixar" type="button">Baixar PNG</button>
+          <button class="acao" id="reset" type="button">Voltar aos números do original</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <section class="receita">
+    <h2>O que acontece com cada pixel</h2>
+    <div class="passos">
+      <article class="passo">
+        <span class="ordem">01</span>
+        <h3>Luminância</h3>
+        <p>Cada pixel vira um número de brilho: <code>0.299R + 0.587G + 0.114B</code>. É a fórmula que pesa o verde mais que o azul porque o olho enxerga assim.</p>
+      </article>
+      <article class="passo">
+        <span class="ordem">02</span>
+        <h3>Contraste</h3>
+        <p><code>(L − 128) × 1.4 + 128</code> — afasta claro e escuro do meio, senão a retícula sai toda cinzenta e sem forma.</p>
+      </article>
+      <article class="passo">
+        <span class="ordem">03</span>
+        <h3>Nitidez</h3>
+        <p>Compara com uma cópia borrada em 2 px e devolve a diferença amplificada. É o que faz olho, boca e contorno sobreviverem à grade.</p>
+      </article>
+      <article class="passo">
+        <span class="ordem">04</span>
+        <h3>Blocos</h3>
+        <p>Cada quadrado de 4×4 pixels vira uma célula, com a média da luz e do alpha. Aqui a foto deixa de ser foto e vira grade.</p>
+      </article>
+      <article class="passo">
+        <span class="ordem">05</span>
+        <h3>Raio</h3>
+        <p><code>8 × luz^1.3</code>. Claro vira bolinha gorda, escuro encolhe até sumir — e é o sumiço que desenha a sombra.</p>
+      </article>
+      <article class="passo">
+        <span class="ordem">06</span>
+        <h3>Recorte</h3>
+        <p>Célula com alpha abaixo de 140 é pulada. Por isso o PNG precisa ter fundo transparente: é o alpha que diz onde a pessoa termina.</p>
+      </article>
+    </div>
+    <p class="rodape">
+      A dissolvida na base do retrato não faz parte do desenho — é CSS puro:
+      <code>mask-image: linear-gradient(to bottom, #000 58%, transparent 82%)</code>.
+      Sua foto é lida no seu navegador e não sai dele.
+    </p>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PADROES = { bloco: 4, raio: 8, gama: 1.3, contraste: 1.4, nitidez: 1.8, corte: 140, duracao: 1.8 };
+  var MAX_ORIGEM = 520;   // a foto é reduzida a isso antes de virar grade
+  var ESCALA = 4;         // o canvas de trabalho é 4x, para o ponto sair liso
+
+  var saida = document.getElementById("saida");
+  var ctxSaida = saida.getContext("2d");
+  var selo = document.getElementById("selo");
+  var aviso = document.getElementById("aviso");
+
+  var imagemAtual = null;   // HTMLImageElement | HTMLCanvasElement
+  var pontos = null;
+  var anim = null;
+
+  function num(id) { return parseFloat(document.getElementById(id).value); }
+
+  function lerControles() {
+    return {
+      bloco: num("bloco"), raio: num("raio"), gama: num("gama"),
+      contraste: num("contraste"), nitidez: num("nitidez"),
+      corte: num("corte"), duracao: num("duracao")
+    };
+  }
+
+  function limitar(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+
+  /* ---------- 1. a foto vira uma grade de células ---------- */
+
+  function analisar(fonte, op) {
+    var w = fonte.naturalWidth || fonte.width;
+    var h = fonte.naturalHeight || fonte.height;
+    if (!w || !h) return null;
+
+    // reduz antes de medir: mantém a densidade da grade previsível
+    var k = Math.min(1, MAX_ORIGEM / Math.max(w, h));
+    w = Math.max(1, Math.round(w * k));
+    h = Math.max(1, Math.round(h * k));
+
+    var base = document.createElement("canvas");
+    base.width = w; base.height = h;
+    var cb = base.getContext("2d", { willReadFrequently: true });
+    cb.drawImage(fonte, 0, 0, w, h);
+
+    var px = cb.getImageData(0, 0, w, h).data;
+    var n = w * h;
+    var luz = new Float32Array(n);
+    var alpha = new Uint8ClampedArray(n);
+
+    for (var i = 0; i < n; i++) {
+      var r = px[4 * i], g = px[4 * i + 1], b = px[4 * i + 2];
+      alpha[i] = px[4 * i + 3];
+      var L = 0.299 * r + 0.587 * g + 0.114 * b;
+      luz[i] = limitar((L - 128) * op.contraste + 128);
+    }
+
+    // nitidez: diferença contra um borrado de 2 px
+    var nitida = luz;
+    if (op.nitidez > 0) {
+      var cinza = document.createElement("canvas");
+      cinza.width = w; cinza.height = h;
+      var cc = cinza.getContext("2d", { willReadFrequently: true });
+      var img = cc.createImageData(w, h);
+      for (var j = 0; j < n; j++) {
+        var v = luz[j];
+        img.data[4 * j] = v; img.data[4 * j + 1] = v; img.data[4 * j + 2] = v; img.data[4 * j + 3] = 255;
+      }
+      cc.putImageData(img, 0, 0);
+
+      var borrado = document.createElement("canvas");
+      borrado.width = w; borrado.height = h;
+      var cbo = borrado.getContext("2d", { willReadFrequently: true });
+      cbo.filter = "blur(2px)";
+      cbo.drawImage(cinza, 0, 0);
+      var pb = cbo.getImageData(0, 0, w, h).data;
+
+      nitida = new Float32Array(n);
+      for (var m = 0; m < n; m++) {
+        var d = luz[m] - pb[4 * m];
+        nitida[m] = limitar(Math.abs(d) > 2 ? luz[m] + op.nitidez * d : luz[m]);
+      }
+    }
+
+    // médias por bloco
+    var passo = Math.max(1, Math.round(op.bloco));
+    var cols = Math.ceil(w / passo), rows = Math.ceil(h / passo);
+    var somaLuz = new Float32Array(cols * rows);
+    var somaAlpha = new Float32Array(cols * rows);
+    var conta = new Uint32Array(cols * rows);
+
+    for (var y = 0; y < h; y++) {
+      var linha = (y / passo) | 0;
+      for (var x = 0; x < w; x++) {
+        var cel = linha * cols + ((x / passo) | 0);
+        var idx = y * w + x;
+        somaLuz[cel] += nitida[idx];
+        somaAlpha[cel] += alpha[idx];
+        conta[cel]++;
+      }
+    }
+
+    var mediaLuz = new Float32Array(cols * rows);
+    var mediaAlpha = new Float32Array(cols * rows);
+    for (var c = 0; c < cols * rows; c++) {
+      if (conta[c]) {
+        mediaLuz[c] = somaLuz[c] / conta[c] / 255;
+        mediaAlpha[c] = somaAlpha[c] / conta[c];
+      }
+    }
+    return { w: w, h: h, cols: cols, rows: rows, passo: passo, luz: mediaLuz, alpha: mediaAlpha };
+  }
+
+  /* ---------- 2. as células viram pontos, com origem e atraso ---------- */
+
+  function montarPontos(a, op) {
+    var tx = [], ty = [], g = [], sx = [], sy = [], atraso = [];
+    for (var linha = 0; linha < a.rows; linha++) {
+      for (var col = 0; col < a.cols; col++) {
+        var i = linha * a.cols + col;
+        if (a.alpha[i] < op.corte) continue;
+        var forca = Math.pow(a.luz[i], op.gama);
+        if (op.raio * forca < 0.5) continue;
+        tx.push(a.passo * col + a.passo / 2);
+        ty.push(a.passo * linha + a.passo / 2);
+        g.push(forca);
+        sx.push((1.3 * Math.random() - 0.15) * a.w);
+        sy.push((1.3 * Math.random() - 0.15) * a.h);
+        atraso.push(0.45 * Math.random());
+      }
+    }
+    return {
+      n: tx.length, w: a.w, h: a.h,
+      tx: new Float32Array(tx), ty: new Float32Array(ty), g: new Float32Array(g),
+      sx: new Float32Array(sx), sy: new Float32Array(sy), atraso: new Float32Array(atraso)
+    };
+  }
+
+  /* ---------- 3. desenho ---------- */
+
+  function pintar(p, t, op) {
+    if (!p) return;
+    saida.width = p.w * ESCALA;
+    saida.height = p.h * ESCALA;
+    var c = ctxSaida;
+    c.clearRect(0, 0, saida.width, saida.height);
+    c.fillStyle = "#ffffff";
+    var volta = Math.PI * 2;
+
+    for (var i = 0; i < p.n; i++) {
+      var d = p.atraso[i];
+      var bruto = d >= 1 ? 0 : Math.min(1, Math.max(0, (t - d) / (1 - d)));
+      var resta = 1 - bruto;
+      var s = 1 - resta * resta * resta;          // easing cúbico de saída
+      var x = (p.sx[i] + (p.tx[i] - p.sx[i]) * s) * ESCALA;
+      var y = (p.sy[i] + (p.ty[i] - p.sy[i]) * s) * ESCALA;
+      var r = op.raio * p.g[i] * (0.45 + 0.55 * s);
+      if (r <= 0.02) continue;
+      c.globalAlpha = 0.12 + 0.88 * s;
+      c.beginPath();
+      c.arc(x, y, r, 0, volta);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+
+  function reprocessar(tocarEntrada) {
+    if (!imagemAtual) return;
+    var op = lerControles();
+    var a = analisar(imagemAtual, op);
+    if (!a) return;
+    pontos = montarPontos(a, op);
+    if (tocarEntrada) tocar(); else pintar(pontos, 1, op);
+  }
+
+  function tocar() {
+    if (!pontos) return;
+    if (anim) cancelAnimationFrame(anim);
+    var op = lerControles();
+    var reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduzido) { pintar(pontos, 1, op); return; }
+    var inicio = performance.now();
+    var ms = op.duracao * 1000;
+    (function quadro(agora) {
+      var t = Math.min(1, (agora - inicio) / ms);
+      pintar(pontos, t, op);
+      if (t < 1) anim = requestAnimationFrame(quadro);
+      else anim = null;
+    })(inicio);
+  }
+
+  /* ---------- exemplo sintético, pra página abrir mostrando o efeito ---------- */
+
+  function exemplo() {
+    var w = 471, h = 530;
+    var cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    var c = cv.getContext("2d");
+
+    // silhueta de busto, recortada (fora dela o alpha fica 0)
+    c.beginPath();
+    c.ellipse(w * 0.5, h * 0.34, w * 0.21, h * 0.25, 0, 0, Math.PI * 2);
+    c.moveTo(w * 0.5, h * 0.55);
+    c.bezierCurveTo(w * 0.14, h * 0.66, w * 0.06, h * 0.82, w * 0.05, h);
+    c.lineTo(w * 0.95, h);
+    c.bezierCurveTo(w * 0.94, h * 0.82, w * 0.86, h * 0.66, w * 0.5, h * 0.55);
+    c.closePath();
+    c.clip();
+
+    // luz vindo de cima à esquerda: é o gradiente que a retícula transforma em volume
+    var luz = c.createRadialGradient(w * 0.36, h * 0.22, 10, w * 0.5, h * 0.42, h * 0.72);
+    luz.addColorStop(0, "#ffffff");
+    luz.addColorStop(0.42, "#9aa0aa");
+    luz.addColorStop(1, "#0d0f13");
+    c.fillStyle = luz;
+    c.fillRect(0, 0, w, h);
+
+    // duas marcas escuras onde estariam os olhos, pra leitura não ficar abstrata
+    c.globalCompositeOperation = "multiply";
+    [[0.42, 0.33], [0.58, 0.33]].forEach(function (o) {
+      var g = c.createRadialGradient(w * o[0], h * o[1], 1, w * o[0], h * o[1], w * 0.05);
+      g.addColorStop(0, "#20242c");
+      g.addColorStop(1, "#ffffff");
+      c.fillStyle = g;
+      c.fillRect(w * (o[0] - 0.08), h * (o[1] - 0.06), w * 0.16, h * 0.12);
+    });
+    c.globalCompositeOperation = "source-over";
+    return cv;
+  }
+
+  /* ---------- entrada de arquivo ---------- */
+
+  function mostrarAviso(txt) {
+    aviso.textContent = txt || "";
+    aviso.classList.toggle("visivel", !!txt);
+  }
+
+  function carregar(arquivo) {
+    if (!arquivo || !/^image\//.test(arquivo.type)) {
+      mostrarAviso("Isso não é uma imagem. Use um PNG com fundo transparente.");
+      return;
+    }
+    var leitor = new FileReader();
+    leitor.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        imagemAtual = img;
+        selo.textContent = arquivo.name;
+        // sem transparência o recorte não existe e sai um retângulo cheio
+        mostrarAviso(temTransparencia(img) ? "" :
+          "Essa imagem não tem fundo transparente, então a retícula vai preencher o quadro inteiro. Recorte o fundo num PNG para o contorno aparecer.");
+        reprocessar(true);
+      };
+      img.onerror = function () { mostrarAviso("Não consegui abrir esse arquivo."); };
+      img.src = leitor.result;
+    };
+    leitor.onerror = function () { mostrarAviso("Não consegui ler esse arquivo."); };
+    leitor.readAsDataURL(arquivo);
+  }
+
+  function temTransparencia(img) {
+    var w = Math.min(120, img.naturalWidth), h = Math.min(120, img.naturalHeight);
+    var cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    var c = cv.getContext("2d", { willReadFrequently: true });
+    c.drawImage(img, 0, 0, w, h);
+    var d;
+    try { d = c.getImageData(0, 0, w, h).data; } catch (e) { return true; }
+    for (var i = 3; i < d.length; i += 4) if (d[i] < 200) return true;
+    return false;
+  }
+
+  /* ---------- ligações ---------- */
+
+  var solta = document.getElementById("solta");
+  var campo = document.getElementById("arquivo");
+
+  solta.addEventListener("click", function () { campo.click(); });
+  solta.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); campo.click(); }
+  });
+  campo.addEventListener("change", function () { if (campo.files[0]) carregar(campo.files[0]); });
+
+  ["dragenter", "dragover"].forEach(function (ev) {
+    solta.addEventListener(ev, function (e) { e.preventDefault(); solta.classList.add("ativa"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    solta.addEventListener(ev, function (e) { e.preventDefault(); solta.classList.remove("ativa"); });
+  });
+  solta.addEventListener("drop", function (e) {
+    if (e.dataTransfer && e.dataTransfer.files[0]) carregar(e.dataTransfer.files[0]);
+  });
+
+  var etiquetas = {
+    bloco: function (v) { return v + " px"; },
+    raio: function (v) { return v.toFixed(1); },
+    gama: function (v) { return v.toFixed(2); },
+    contraste: function (v) { return v.toFixed(2); },
+    nitidez: function (v) { return v.toFixed(2); },
+    corte: function (v) { return String(v); },
+    duracao: function (v) { return v.toFixed(2) + " s"; }
+  };
+
+  Object.keys(etiquetas).forEach(function (id) {
+    var el = document.getElementById(id);
+    var mostrador = document.getElementById("v-" + id);
+    el.addEventListener("input", function () {
+      mostrador.textContent = etiquetas[id](parseFloat(el.value));
+      if (id !== "duracao") reprocessar(false);
+    });
+  });
+
+  document.getElementById("tocar").addEventListener("click", function () { tocar(); });
+
+  document.getElementById("reset").addEventListener("click", function () {
+    Object.keys(PADROES).forEach(function (id) {
+      var el = document.getElementById(id);
+      el.value = PADROES[id];
+      document.getElementById("v-" + id).textContent = etiquetas[id](PADROES[id]);
+    });
+    reprocessar(false);
+  });
+
+  /* ---------- baixar ---------- */
+
+  var btnBaixar = document.getElementById("baixar");
+
+  // Servida como página comum, a âncora com `download` resolve. Dentro do visualizador
+  // de artefatos do Claude a âncora é inerte, e lá existe uma capacidade pra isso —
+  // se ela aparecer, passa a ser o caminho.
+  var salvarPeloHost = null;
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("downloads")
+      .then(function (d) { salvarPeloHost = d; })
+      .catch(function () { /* segue na âncora */ });
+  }
+
+  function porAncora(blob, nome) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+  }
+
+  btnBaixar.addEventListener("click", function () {
+    var rotulo = btnBaixar.textContent;
+    btnBaixar.disabled = true;
+    btnBaixar.textContent = "Salvando…";
+
+    var volta = function (txt) {
+      btnBaixar.textContent = txt || rotulo;
+      btnBaixar.disabled = false;
+      if (txt) setTimeout(function () { btnBaixar.textContent = rotulo; }, 1600);
+    };
+
+    saida.toBlob(function (blob) {
+      if (!blob) { volta(); return; }
+      var nome = "reticula.png";
+      if (salvarPeloHost) {
+        salvarPeloHost.save({ filename: nome, data: blob })
+          .then(function () { volta("Salvo"); })
+          .catch(function (err) {
+            volta();
+            if (err && err.code && err.code !== "declined") {
+              mostrarAviso("Não deu para salvar agora (" + err.code + "). Tente de novo.");
+            }
+          });
+      } else {
+        porAncora(blob, nome);
+        volta("Salvo");
+      }
+    }, "image/png");
+  });
+
+  /* ---------- estado inicial: já mostra o efeito pronto ---------- */
+
+  imagemAtual = exemplo();
+  reprocessar(false);
+})();
+</script>
